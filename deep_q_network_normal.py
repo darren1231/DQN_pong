@@ -15,7 +15,7 @@ from collections import deque
 GAME = 'pong' # the name of the game being played for log files
 ACTIONS = 3 # number of valid actions
 GAMMA = 0.99 # decay rate of past observations
-OBSERVE = 500. # timesteps to observe before training
+OBSERVE = 5000. # timesteps to observe before training
 EXPLORE = 500. # frames over which to anneal epsilon
 FINAL_EPSILON = 0.05 # final value of epsilon
 INITIAL_EPSILON = 1.0 # starting value of epsilon
