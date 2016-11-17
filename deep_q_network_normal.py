@@ -15,11 +15,11 @@ from collections import deque
 GAME = 'pong' # the name of the game being played for log files
 ACTIONS = 3 # number of valid actions
 GAMMA = 0.99 # decay rate of past observations
-OBSERVE = 5000. # timesteps to observe before training
+OBSERVE = 500. # timesteps to observe before training
 EXPLORE = 500. # frames over which to anneal epsilon
 FINAL_EPSILON = 0.05 # final value of epsilon
 INITIAL_EPSILON = 1.0 # starting value of epsilon
-REPLAY_MEMORY = 100000 # number of previous transitions to remember
+REPLAY_MEMORY = 5000 # number of previous transitions to remember
 BATCH = 32 # size of minibatch
 K = 1 # only select an action every Kth frame, repeat prev for others
 
