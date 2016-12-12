@@ -15,11 +15,11 @@ from collections import deque
 GAME = 'pong' # the name of the game being played for log files
 ACTIONS = 3 # number of valid actions
 GAMMA = 0.99 # decay rate of past observations
-OBSERVE = 500. # timesteps to observe before training
+OBSERVE = 5000. # timesteps to observe before training
 EXPLORE = 500. # frames over which to anneal epsilon
 FINAL_EPSILON = 0.05 # final value of epsilon
 INITIAL_EPSILON = 1.0 # starting value of epsilon
-REPLAY_MEMORY = 5000 # number of previous transitions to remember
+REPLAY_MEMORY = 100000 # number of previous transitions to remember
 BATCH = 32 # size of minibatch
 K = 1 # only select an action every Kth frame, repeat prev for others
 
@@ -185,12 +185,17 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
             x_t1 = np.reshape(x_t1, (80, 80, 1))
             s_t1 = np.append(x_t1, s_t[:,:,0:3], axis = 2)
 
+
+            total_score=total_score+r_t
+            if r_t==-1:                
+                r_t=0
+            
             # store the transition in D
             D.append((s_t, a_t, r_t, s_t1, terminal))
             if len(D) > REPLAY_MEMORY:
                 D.popleft()
                 
-        total_score=total_score+r_t;
+        
         if r_t==1:
             positive_score=positive_score+r_t
 
