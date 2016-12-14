@@ -99,18 +99,41 @@ def createNetwork():
     return s, readout,variable
 
 def final_network():
-    W_1 = weight_variable([ACTIONS*2, 5000])
-    b_1 = bias_variable([5000])
+    W_1 = weight_variable([ACTIONS*2, 400])
+    b_1 = bias_variable([400])
+    
+    W_conv1 = weight_variable([3, 3, 1, 8])
+    b_conv1 = bias_variable([8])
+    
+    W_conv2 = weight_variable([2, 2, 8, 16])
+    b_conv2 = bias_variable([16])    
+    
+    W_fc1 = weight_variable([400, 100])
+    b_fc1 = bias_variable([100])
+    
+    W_fc2 = weight_variable([100, ACTIONS])
+    b_fc2 = bias_variable([ACTIONS])
 
-    W_2 = weight_variable([5000, ACTIONS])
-    b_2 = bias_variable([ACTIONS])
+
     
     s1 = tf.placeholder("float", [None, ACTIONS])
     s2 = tf.placeholder("float", [None, ACTIONS])
-    s = tf.concat(1, [s1, s2])
     
+    s = tf.concat(1, [s1, s2])    
     h_1 = tf.nn.relu(tf.matmul(s, W_1) + b_1)
-    out = tf.matmul(h_1, W_2) + b_2
+    h_square = tf.reshape(h_1, [-1, 20,20,1])
+    
+    h_conv1 = tf.nn.relu(conv2d(h_square, W_conv1, 2) + b_conv1)          #10,10,8
+    h_pool1 = max_pool_2x2(h_conv1)                                       #5,5,16
+    
+    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2, 1) + b_conv2)           #5,5,16
+    h_conv2_flat = tf.reshape(h_conv2, [-1, 400])
+    
+    h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
+    out = tf.matmul(h_fc1, W_fc2) + b_fc2
+    
+    #out = tf.matmul(h_1, W_2) + b_2
+#    print out.get_shape()
     return s1,s2, out
     
 def sencond2time(senconds):
