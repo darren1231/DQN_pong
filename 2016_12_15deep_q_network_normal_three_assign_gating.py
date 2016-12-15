@@ -15,7 +15,7 @@ from collections import deque
 GAME = 'pong' # the name of the game being played for log files
 ACTIONS = 3 # number of valid actions
 GAMMA = 0.99 # decay rate of past observations
-OBSERVE = 5000. # timesteps to observe before training
+OBSERVE = 500. # timesteps to observe before training
 EXPLORE = 500. # frames over which to anneal epsilon
 FINAL_EPSILON = 0.05 # final value of epsilon
 INITIAL_EPSILON = 1.0 # starting value of epsilon
@@ -99,42 +99,65 @@ def createNetwork():
     return s, readout,variable
 
 def final_network():
-    W_1 = weight_variable([ACTIONS*2, 1600])
-    b_1 = bias_variable([1600])
-    
-    W_conv1 = weight_variable([3, 3, 1, 8])
-    b_conv1 = bias_variable([8])
-    
-    W_conv2 = weight_variable([2, 2, 8, 16])
-    b_conv2 = bias_variable([16])    
+    # network weights
+    W_conv1 = weight_variable([8, 8, 4, 32])
+    b_conv1 = bias_variable([32])
+
+    W_conv2 = weight_variable([4, 4, 32, 64])
+    b_conv2 = bias_variable([64])
+
+    W_conv3 = weight_variable([3, 3, 64, 64])
+    b_conv3 = bias_variable([64])
     
     W_fc1 = weight_variable([1600, 512])
     b_fc1 = bias_variable([512])
-    
-    W_fc2 = weight_variable([512, ACTIONS])
-    b_fc2 = bias_variable([ACTIONS])
 
+    W_fc2 = weight_variable([512, 2])
+    b_fc2 = bias_variable([2])
 
+    # input layer
+    s = tf.placeholder("float", [None, 80, 80, 4],name='final_input')
+
+    # hidden layers
+    h_conv1 = tf.nn.relu(conv2d(s, W_conv1, 4) + b_conv1)
+    h_pool1 = max_pool_2x2(h_conv1)
+
+    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2, 2) + b_conv2)
+    #h_pool2 = max_pool_2x2(h_conv2)
+
+    h_conv3 = tf.nn.relu(conv2d(h_conv2, W_conv3, 1) + b_conv3)
+    #h_pool3 = max_pool_2x2(h_conv3)
+
+    #h_pool3_flat = tf.reshape(h_pool3, [-1, 256])
+    h_conv3_flat = tf.reshape(h_conv3, [-1, 1600])
+
+    h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, W_fc1) + b_fc1)
+
+    # readout layer
+    readout = tf.nn.softmax(tf.matmul(h_fc1, W_fc2) + b_fc2)  #(-1,2)
     
-    s1 = tf.placeholder("float", [None, ACTIONS])
-    s2 = tf.placeholder("float", [None, ACTIONS])
+    g1,g2=tf.split(1, 2, readout)
     
-    s = tf.concat(1, [s1, s2])    
-    h_1 = tf.nn.relu(tf.matmul(s, W_1) + b_1)
-    h_square = tf.reshape(h_1, [-1, 40,40,1])
+    "Gating network combine"""""""""""""""""""""""""
     
-    h_conv1 = tf.nn.relu(conv2d(h_square, W_conv1, 2) + b_conv1)          #20,20,8
-    h_pool1 = max_pool_2x2(h_conv1)                                       #10,10,16
+    s1 = tf.placeholder("float", [None, ACTIONS],name='s1')
+    s1_up,s1_down,s1_no=tf.split(1, 3, s1)
     
-    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2, 1) + b_conv2)           #10,10,16
-    h_conv2_flat = tf.reshape(h_conv2, [-1, 1600])
     
-    h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
-    out = tf.matmul(h_fc1, W_fc2) + b_fc2
+    s2 = tf.placeholder("float", [None, ACTIONS],name='s2')
+    s2_up,s2_down,s2_no=tf.split(1, 3, s2)
     
-    #out = tf.matmul(h_1, W_2) + b_2
-#    print out.get_shape()
-    return s1,s2, out
+    out_up = tf.mul(g1,s1_up)+tf.mul(g2,s2_up)
+    out_down =tf.mul(g1,s1_down)+tf.mul(g2,s2_down)
+    out_no = tf.mul(g1,s1_no)+tf.mul(g2,s2_no)
+    """"""""""""""""""""""""""""""""""""""""""""""""
+    
+    out=tf.concat(1, [out_up,out_down,out_no])
+    #h_1 = tf.nn.relu(tf.matmul(s, W_1) + b_1)
+#    out = tf.matmul(h_1, W_2) + b_2
+    
+#    out=tf.matmul(s, W_1) + b_1
+    return s,s1,s2, out
     
 def sencond2time(senconds):
 
@@ -148,7 +171,7 @@ def sencond2time(senconds):
 	else:
 		return "[InModuleError]:sencond2time(senconds) invalid argument type"
 
-def trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,variable_normal,variable_hit,old_variable_normal,old_variable_train_hit_only):
+def trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,variable_normal,variable_hit,old_variable_normal,old_variable_train_hit_only,s_final):
 
     
     # define the cost function
@@ -247,7 +270,7 @@ def trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,
         # choose an action epsilon greedily
         readout_t = sess.run(readout,feed_dict = {s : [s_t]})[0]
         hit_t  = sess2.run(readout_hit,feed_dict = {s_hit : [s_t]})[0]
-        final_t  = sess3.run(final_out,feed_dict = {s1 : [readout_t],s2 : [hit_t]})[0]
+        final_t  = sess3.run(final_out,feed_dict = {s1 : [readout_t],s2 : [hit_t],s_final:[s_t]})[0]
 
         a_t = np.zeros([ACTIONS])
         action_index = 0
@@ -325,7 +348,7 @@ def trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,
             readout_j_batch = sess.run(readout,feed_dict = {s : s_j_batch})
             readout_hit_j_batch = sess2.run(readout_hit,feed_dict = {s_hit : s_j_batch})
             
-            readout_final_j1_batch = sess3.run(final_out,feed_dict = {s1 : readout_j1_batch,s2 :readout_hit_j1_batch})
+            readout_final_j1_batch  = sess3.run(final_out,feed_dict = {s1 : readout_j1_batch,s2 : readout_hit_j1_batch,s_final:s_j1_batch})
             
             for i in range(0, len(minibatch)):
                 
@@ -406,6 +429,7 @@ def trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,
             sess3.run(train_step_final,feed_dict = {
                 y_final : y_batch_final,
                 a_final : a_batch,
+                s_final : s_j_batch,
                 s1 : readout_j_batch,
                 s2 : readout_hit_j_batch})
             
@@ -499,13 +523,13 @@ def playGame():
     
     
     
-    s1,s2,final_out = final_network()
+    s_final,s1,s2,final_out = final_network()
 
 #    merged = tf.merge_all_summaries()
 #    writer = tf.train.SummaryWriter(tensorboard_path, sess.graph)
     
     
-    trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,variable_normal,variable_hit,old_variable_normal,old_variable_train_hit_only)
+    trainNetwork(s,s_hit, readout,readout_hit, sess,sess2,s1,s2,final_out,sess3,variable_normal,variable_hit,old_variable_normal,old_variable_train_hit_only,s_final)
 
 
 
