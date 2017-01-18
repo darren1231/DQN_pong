@@ -1,6 +1,0 @@
-model_checkpoint_path: "pong-dqn-370000"
-all_model_checkpoint_paths: "pong-dqn-330000"
-all_model_checkpoint_paths: "pong-dqn-340000"
-all_model_checkpoint_paths: "pong-dqn-350000"
-all_model_checkpoint_paths: "pong-dqn-360000"
-all_model_checkpoint_paths: "pong-dqn-370000"
