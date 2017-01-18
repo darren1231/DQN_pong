@@ -185,6 +185,12 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
             x_t1 = np.reshape(x_t1, (80, 80, 1))
             s_t1 = np.append(x_t1, s_t[:,:,0:3], axis = 2)
             
+            if r_t==1 or r_t==-1:
+                total_score=total_score+r_t
+                
+            if r_t==1:
+                positive_score=positive_score+r_t
+                
             if(r_t==0.5):
                 r_t=1
             # store the transition in D
@@ -192,10 +198,9 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
             if len(D) > REPLAY_MEMORY:
                 D.popleft()
                 
-        if r_t==1 or r_t==-1:
-            total_score=total_score+r_t;
-        if r_t==1:
-            positive_score=positive_score+r_t
+        
+            
+        
 
         # only train if done observing
         if t > OBSERVE:

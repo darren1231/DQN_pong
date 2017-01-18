@@ -133,7 +133,7 @@ def final_network():
     out = tf.matmul(h_fc1, W_fc2) + b_fc2
     
     #out = tf.matmul(h_1, W_2) + b_2
-#    print out.get_shape()
+    #print out.get_shape()
     return s1,s2, out
     
 def sencond2time(senconds):

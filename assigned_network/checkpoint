@@ -1,4 +1,4 @@
-model_checkpoint_path: "pong-dqn-510000_normal"
-all_model_checkpoint_paths: "pong-dqn-510000_normal"
-all_model_checkpoint_paths: "pong-dqn-1320000_train_hit_only"
+model_checkpoint_path: "flappybird-dqn-790000_without_reward_alive"
+all_model_checkpoint_paths: "flappybird-dqn-790000_without_reward_alive"
+all_model_checkpoint_paths: "flappybird-dqn-1770000_without_pass_reward"
 

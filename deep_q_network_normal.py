@@ -15,7 +15,7 @@ from collections import deque
 GAME = 'pong' # the name of the game being played for log files
 ACTIONS = 3 # number of valid actions
 GAMMA = 0.99 # decay rate of past observations
-OBSERVE = 5000. # timesteps to observe before training
+OBSERVE = 500. # timesteps to observe before training
 EXPLORE = 500. # frames over which to anneal epsilon
 FINAL_EPSILON = 0.05 # final value of epsilon
 INITIAL_EPSILON = 1.0 # starting value of epsilon
@@ -126,7 +126,7 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
 
     # printing
     a_file = open(out_put_path  + "/readout.txt", 'w')
-    h_file = open(out_put_path  + "/hidden.txt", 'w')
+    
 
 
     # get the first state by doing nothing and preprocess the image to 80x80x4
@@ -187,8 +187,7 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
 
 
             total_score=total_score+r_t
-            if r_t==-1:                
-                r_t=0
+            
             
             # store the transition in D
             D.append((s_t, a_t, r_t, s_t1, terminal))
@@ -217,7 +216,6 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
                 if minibatch[i][4]:
                     y_batch.append(r_batch[i])
                 else:
-                    #y_batch.append(r_batch[i] + GAMMA * np.max(readout_j1_batch[i]))
                     y_batch.append(r_batch[i] + GAMMA * np.max(readout_j1_batch[i]))                   
                     
 
@@ -249,13 +247,7 @@ def trainNetwork(s, readout, h_fc1, sess,merged,writer):
             +','+time_text+'\n')
 
         # print info
-        state = ""
-        if t <= OBSERVE:
-            state = "observe"
-        elif t > OBSERVE and t <= OBSERVE + EXPLORE:
-            state = "explore"
-        else:
-            state = "train"
+        
         print "TIMESTEP:", t+pretrain_number, "/ ACTION:", action_index, "/ REWARD:", r_t, "/ Q_MAX: %e" % np.max(readout_t),'  time:(H,M,S):' \
         + sencond2time((datetime.datetime.now()-start).seconds)
         print 'Total score:',total_score,' Positive_score:',positive_score,'   up:',readout_t[0],'    down:',readout_t[1],'  no:',readout_t[2]

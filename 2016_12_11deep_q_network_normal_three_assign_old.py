@@ -99,10 +99,10 @@ def createNetwork():
     return s, readout,variable
 
 def final_network():
-    W_1 = weight_variable([ACTIONS*2, 5000])
-    b_1 = bias_variable([5000])
+    W_1 = weight_variable([ACTIONS*2, 10000])
+    b_1 = bias_variable([10000])
 
-    W_2 = weight_variable([5000, ACTIONS])
+    W_2 = weight_variable([10000, ACTIONS])
     b_2 = bias_variable([ACTIONS])
     
     s1 = tf.placeholder("float", [None, ACTIONS])
